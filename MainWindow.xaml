@@ -1,225 +1,843 @@
 <Window x:Class="LabReportApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Lab Report Management System" Height="900" Width="1120"
-        MinHeight="760" MinWidth="960"
+        Title="Lab ProX" Height="920" Width="1180"
+        MinHeight="700" MinWidth="1320"
         Icon="Assets/Logo.ico"
         Background="{DynamicResource ColorBackground}"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 
-    <!-- ScrollViewer wraps the whole page: if the content is taller than the window,
-         a vertical scrollbar (slider) appears automatically on the right side. -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-        Background="{DynamicResource ColorBackground}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Header banner -->
-                <RowDefinition Height="Auto"/> <!-- Patient Details card -->
-                <RowDefinition Height="Auto"/> <!-- Tests card -->
-                <RowDefinition Height="Auto"/> <!-- Actions card -->
-            </Grid.RowDefinitions>
-
-            <!-- ================= TOP HEADER BANNER ================= -->
-            <Border Grid.Row="0" Background="{DynamicResource ColorBannerBg}" Padding="24,18">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Lab Report Management System" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                        <TextBlock Text="Step 1: Bill the patient for requested tests. Step 2: Enter results later from 'Pending Reports' to send the report."
-                                   FontSize="12" Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,3,0,0"/>
-                    </StackPanel>
-
-                    <Button x:Name="btnToggleTheme" Grid.Column="1" Content="🌙 Dark Mode" Style="{StaticResource ThemeToggleButton}"
-                            VerticalAlignment="Center" Click="btnToggleTheme_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- ================= PATIENT DETAILS ================= -->
-            <Grid Grid.Row="1" Margin="20,20,20,0">
-                <Border Style="{StaticResource CardBackground}"/>
-                <Border Style="{StaticResource CardContent}">
-                    <StackPanel>
-                        <TextBlock Text="Patient Details" Style="{StaticResource SectionHeading}" Margin="0,0,0,10"/>
-
+    <Window.Resources>
+        <Style x:Key="MainTabControl" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="5">
-                                <TextBlock Text="PATIENT NAME *" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="txtName" Height="32"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="5">
-                                <TextBlock Text="PHONE NUMBER *" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="txtPhone" Height="32"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="5">
-                                <TextBlock Text="AGE *" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="txtAge" Height="32"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="5">
-                                <TextBlock Text="GENDER *" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox x:Name="cmbGender" Height="32">
-                                    <ComboBoxItem Content="Male"/>
-                                    <ComboBoxItem Content="Female"/>
-                                    <ComboBoxItem Content="Other"/>
-                                </ComboBox>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="5">
-                                <TextBlock Text="REFERRED BY" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="txtReferredBy" Height="32"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
-                                <TextBlock Text="LAB NAME (leave blank for default)" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="txtLabName" Height="32"/>
-                            </StackPanel>
+                            <TabPanel x:Name="HeaderPanel" Grid.Row="0" IsItemsHost="True" Margin="4,0,4,0"/>
+                            <Border Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,10,0,0">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
                         </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="MainTabItem" TargetType="TabItem">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource ColorTextSecondary}"/>
+            <Setter Property="Padding" Value="20,11"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd" Background="{DynamicResource ColorCard}"
+                                BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"
+                                CornerRadius="10" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ColorPrimaryLight}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ColorPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ColorPrimary}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ColorPrimary}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ColorPrimaryDark}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{DynamicResource ColorBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= HEADER ================= -->
+        <Border Grid.Row="0" Background="{DynamicResource ColorBannerBg}" Padding="20,12,16,12">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="46" Height="46" CornerRadius="12" Background="White" Margin="0,0,14,0">
+                        <Viewbox Margin="9">
+                            <Path Fill="#1457B8" Data="M9,1 H15 V7 L19.2,15.2 A4.6,4.6 0 0 1 15,22 H9 A4.6,4.6 0 0 1 4.8,15.2 L9,7 Z"/>
+                        </Viewbox>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="txtProductName" Text="Lab ProX" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock x:Name="txtHeaderSubtitle" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="420"
+                                   Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,4,0,0"/>
                     </StackPanel>
-                </Border>
-            </Grid>
+                </StackPanel>
 
-            <!-- ================= SELECT TESTS (Stage 1 - Billing) ================= -->
-            <Grid Grid.Row="2" Margin="20,16,20,0">
-                <Border Style="{StaticResource CardBackground}"/>
-                <Border Style="{StaticResource CardContent}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Margin="0,0,0,8">
-                            <DockPanel>
-                                <TextBlock Text="Select Tests for Bill" Style="{StaticResource SectionHeading}" VerticalAlignment="Center"/>
-                                <Button x:Name="btnManageTests" Content="Manage Tests" Style="{StaticResource SecondaryButton}"
-                                        HorizontalAlignment="Right" Click="btnManageTests_Click"/>
-                            </DockPanel>
-                            <TextBlock Text="Tip: type a Test Name below to see suggestions from your saved test list. Selecting one auto-fills Category, Unit, Normal Range and Price. Use 'Discount %' on a row for a per-test discount, or 'Overall Discount %' below for a discount on the whole bill (e.g. a doctor's reference discount). Results are entered later, after testing is done."
-                                       FontSize="10.5" Foreground="{DynamicResource ColorTextSecondary}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                <!-- Kept beside the name so the window close button does not sit on this card. -->
+                <Button Grid.Column="1" x:Name="btnWhatsAppSales" Click="btnWhatsAppSales_Click"
+                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,16,0"
+                        Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                        ToolTip="Sales inquiries. This Lab ProX number is permanent.">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="card" Background="#22FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1" CornerRadius="12" Padding="12,8">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="card" Property="Background" Value="#33FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="14" Background="#25D366" Margin="0,0,10,0">
+                            <Viewbox Width="16" Height="16">
+                                <Path Fill="White" Data="M19.05 4.91A9.82 9.82 0 0 0 12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.32 4.95L2 22l5.39-1.4a10.1 10.1 0 0 0 4.65 1.12h.01c5.46 0 9.89-4.4 9.89-9.84 0-2.63-1.03-5.1-2.89-6.97zM12.04 20.15h-.01a8.4 8.4 0 0 1-4.28-1.17l-.3-.18-3.2.84.86-3.12-.2-.32a8.3 8.3 0 0 1-1.28-4.43c0-4.6 3.76-8.34 8.4-8.34 2.24 0 4.35.87 5.93 2.46a8.3 8.3 0 0 1 2.46 5.93c0 4.6-3.77 8.33-8.38 8.33zm4.59-6.24c-.25-.13-1.48-.73-1.71-.81-.23-.08-.4-.12-.57.12-.17.25-.65.81-.8.98-.14.17-.3.19-.55.06-.25-.13-1.06-.39-2.02-1.24-.75-.66-1.25-1.48-1.4-1.73-.14-.25-.02-.38.11-.51.12-.12.25-.3.38-.45.12-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.88-.2-.49-.41-.42-.57-.43h-.48c-.17 0-.45.06-.68.32-.23.25-.9.87-.9 2.13 0 1.26.92 2.48 1.05 2.65.13.17 1.81 2.76 4.39 3.87.61.27 1.09.42 1.46.54.61.19 1.17.17 1.61.1.49-.07 1.48-.6 1.69-1.19.21-.58.21-1.08.14-1.19-.06-.1-.23-.16-.48-.29z"/>
+                            </Viewbox>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="WhatsApp" FontSize="11" FontWeight="SemiBold" Foreground="#E8FFF1"/>
+                            <TextBlock x:Name="txtWhatsAppNumber" Text="+92 342 5534 260" FontSize="15" FontWeight="Bold" Foreground="White"/>
                         </StackPanel>
+                    </StackPanel>
+                </Button>
 
-                        <!-- ============================================================
-                             GRID SIZE: this DataGrid's Height controls how tall the tests
-                             table is. Change the number below (in pixels) to make it bigger
-                             or smaller - see the note at the end of this file for details. -->
-                        <DataGrid Grid.Row="1" x:Name="dgResults" AutoGenerateColumns="False" CanUserAddRows="False"
-                                  Height="210" Margin="0,0,0,10">
-                            <DataGrid.Columns>
+                <Button Grid.Column="2" x:Name="btnActions" Style="{StaticResource HeaderLightButton}"
+                        Height="40" MinWidth="118" VerticalAlignment="Center" Click="btnActions_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Actions" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                   VerticalAlignment="Center" Margin="8,1,0,0"/>
+                    </StackPanel>
+                    <Button.ContextMenu>
+                        <ContextMenu Placement="Bottom"
+                                     Background="{DynamicResource ColorCard}"
+                                     Foreground="{DynamicResource ColorTextPrimary}"
+                                     BorderBrush="{DynamicResource ColorBorder}"
+                                     BorderThickness="1" FontSize="14">
+                            <MenuItem Header="Customize Bill / Receipt" Click="btnCustomizeBill_Click"/>
+                            <MenuItem Header="Customize Laboratory Report" Click="btnCustomizeReport_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Manage Tests" Click="btnManageTests_Click"/>
+                            <MenuItem Header="Manage Panels" Click="btnManagePanels_Click"/>
+                            <MenuItem Header="Manage Doctors" Click="btnManageDoctors_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Bill History" Click="btnBillHistory_Click"/>
+                            <MenuItem Header="Settings" Click="btnSettings_Click"/>
+                            <Separator/>
+                            <MenuItem Tag="theme" Header="Dark Mode" Click="btnToggleTheme_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </Grid>
+        </Border>
 
-                                <!-- CATEGORY (main heading) column with suggestions -->
-                                <DataGridTemplateColumn Header="Category (Main Heading)" Width="2*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding CategoryHeading}" Padding="4,2" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                    <DataGridTemplateColumn.CellEditingTemplate>
-                                        <DataTemplate>
-                                            <ComboBox Text="{Binding CategoryHeading, UpdateSourceTrigger=PropertyChanged}"
-                                                      IsEditable="True" IsTextSearchEnabled="True"
-                                                      ItemsSource="{Binding AllCategories, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellEditingTemplate>
-                                </DataGridTemplateColumn>
+        <Grid Grid.Row="1">
+            <Path VerticalAlignment="Bottom" Height="180" Stretch="Fill" IsHitTestVisible="False"
+                  Fill="{DynamicResource ColorWave}" Opacity="0.85"
+                  Data="M0,70 C240,130 420,20 680,64 C960,112 1180,28 1440,72 L1440,180 L0,180 Z"/>
 
-                                <!-- TEST NAME column with live filtered autocomplete -->
-                                <DataGridTemplateColumn Header="Test Name" Width="2.5*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding TestName}" Padding="4,2" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                    <DataGridTemplateColumn.CellEditingTemplate>
-                                        <DataTemplate>
-                                            <ComboBox x:Name="cmbTestName"
-                                                      Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}"
-                                                      IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
-                                                      Loaded="TestNameCombo_Loaded"
-                                                      KeyUp="TestNameCombo_KeyUp"
-                                                      SelectionChanged="TestNameCombo_SelectionChanged"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellEditingTemplate>
-                                </DataGridTemplateColumn>
+            <Grid Margin="16,12,16,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="1.2*"/>
-                                <DataGridTextColumn Header="Normal Range" Binding="{Binding NormalRange}" Width="1.6*"/>
-                                <DataGridTextColumn Header="Price (PKR)" Binding="{Binding Price}" Width="1.1*" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Discount %" Binding="{Binding Discount}" Width="0.9*"/>
-                                <DataGridTextColumn Header="Net Price (PKR)" Binding="{Binding NetPrice}" Width="1.2*" IsReadOnly="True"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                <TabControl Grid.Row="0" Style="{StaticResource MainTabControl}">
+                    <TabItem x:Name="tabBill" Header="Generate Bill" Style="{StaticResource MainTabItem}">
+                        <!-- Pixel scrolling, no pan-fling. Wheel handling in code moves a short distance per notch. -->
+                        <ScrollViewer x:Name="mainScrollViewer"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="False"
+                                      PanningMode="None"
+                                      Background="Transparent">
+                            <Grid Margin="4,4,4,8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/> <!-- Patient -->
+                                    <RowDefinition Height="Auto"/> <!-- Tests + billing summary -->
+                                    <RowDefinition Height="Auto"/> <!-- Held bills -->
+                                </Grid.RowDefinitions>
 
-                        <DockPanel Grid.Row="2" LastChildFill="False">
-                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button x:Name="btnAddRow" Content="+ Add Row" Style="{StaticResource SecondaryButton}"
-                                        Margin="0,0,10,0" Click="btnAddRow_Click"/>
-                                <Button x:Name="btnRemoveRow" Content="Remove Selected Row" Style="{StaticResource SecondaryButton}"
-                                        Click="btnRemoveRow_Click"/>
+                    <!-- ================= PATIENT SELECTION ================= -->
+                    <Grid Grid.Row="0" Margin="0,4,0,0">
+                        <Border Style="{StaticResource CardBackground}"/>
+                        <Border Style="{StaticResource CardContent}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource ColorPrimaryLight}" Margin="0,0,10,0">
+                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="15"
+                                                   Foreground="{DynamicResource ColorPrimary}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Patient Selection" Style="{StaticResource SectionHeading}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Grid Height="42">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid>
+                                        <ComboBox x:Name="cmbPatientSearch" Height="42" IsEditable="True"
+                                                  IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                                                  DisplayMemberPath="DropdownLabel"
+                                                  VerticalContentAlignment="Center"
+                                                  KeyUp="cmbPatientSearch_KeyUp"
+                                                  SelectionChanged="cmbPatientSearch_SelectionChanged"
+                                                  DropDownOpened="cmbPatientSearch_DropDownOpened"/>
+                                        <TextBlock Text="Search by name, phone, or MR number" IsHitTestVisible="False"
+                                                   Margin="14,0,36,0" VerticalAlignment="Center" FontSize="14.5"
+                                                   Foreground="{DynamicResource ColorTextSecondary}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Text, ElementName=cmbPatientSearch}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+
+                                    <Button Grid.Column="1" x:Name="btnAddPatient" Style="{StaticResource AccentButton}"
+                                            Height="42" Width="42" MinWidth="42" Margin="12,0,0,0" Padding="0"
+                                            ToolTip="Add Patient" Click="btnAddPatient_Click">
+                                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="2" x:Name="btnClearPatient" Style="{StaticResource SecondaryButton}"
+                                            Height="42" Width="42" MinWidth="42" Margin="10,0,0,0" Padding="0"
+                                            ToolTip="Clear" Click="btnClearPatient_Click">
+                                        <TextBlock Text="&#xE894;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+
+                                <TextBlock x:Name="txtPatientEmpty" Text="No matching patients. Use Add Patient to register someone new."
+                                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextPrimary}"
+                                           Margin="0,10,0,0" Visibility="Collapsed"/>
+
+                                <Border x:Name="pnlSelectedPatient" Margin="0,14,0,0" Padding="14,12"
+                                        Background="{DynamicResource ColorPrimaryLight}"
+                                        BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1.5"
+                                        CornerRadius="10" Visibility="Collapsed">
+                                    <Grid VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtSelectedName" FontSize="17" FontWeight="Bold"
+                                                       Foreground="{DynamicResource ColorPrimary}"/>
+                                            <TextBlock x:Name="txtSelectedMeta" FontSize="13.5" FontWeight="SemiBold" Margin="0,4,0,0"
+                                                       Foreground="{DynamicResource ColorTextSecondary}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                            <Button Style="{StaticResource SecondaryButton}" Height="38" Width="38" MinWidth="38"
+                                                    Margin="0,0,8,0" Padding="0" ToolTip="Edit" Click="btnEditPatient_Click">
+                                                <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                            <Button Style="{StaticResource SecondaryButton}" Height="38" Width="38" MinWidth="38"
+                                                    Padding="0" ToolTip="Change" Click="btnChangePatient_Click">
+                                                <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
-
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Subtotal:" FontSize="12" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,4,0"/>
-                                <TextBlock x:Name="txtSubtotalAmount" Text="Rs. 0" FontSize="12" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,20,0"/>
-
-                                <TextBlock Text="Overall Discount %:" FontSize="12" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,8,0"/>
-                                <TextBox x:Name="txtOverallDiscount" Width="55" Height="32" Text="0" VerticalContentAlignment="Center"
-                                         TextChanged="txtOverallDiscount_TextChanged" Margin="0,0,20,0"/>
-
-                                <TextBlock x:Name="txtDiscountAmount" Text="Discount: -Rs. 0" FontSize="12" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource ColorDanger}" Margin="0,0,20,0"/>
-
-                                <TextBlock x:Name="txtTotalAmount" Text="Total Payable: Rs. 0" FontSize="15" FontWeight="Bold"
-                                           Foreground="{DynamicResource ColorPrimaryDark}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DockPanel>
+                        </Border>
                     </Grid>
-                </Border>
+
+                    <!-- ================= TEST SELECTION ================= -->
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <Border Style="{StaticResource CardBackground}"/>
+                        <Border Style="{StaticResource CardContent}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource ColorPrimaryLight}" Margin="0,0,10,0">
+                                            <TextBlock Text="&#xE95E;" FontFamily="Segoe MDL2 Assets" FontSize="15"
+                                                       Foreground="{DynamicResource ColorPrimary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Select Tests for Bill" Style="{StaticResource SectionHeading}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="Add a panel package, or add tests one by one. A panel is charged at its package price."
+                                               FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextSecondary}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Right" Margin="16,0,0,0" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <DataGrid Grid.Row="1" x:Name="dgResults" AutoGenerateColumns="False" CanUserAddRows="False"
+                                          MinHeight="180" MaxHeight="320" Margin="0,0,0,14"
+                                          HeadersVisibility="Column" RowHeight="58"
+                                          SelectionUnit="FullRow" VerticalAlignment="Top">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                            <Setter Property="MinHeight" Value="58"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding EntryRole}" Value="PanelBill">
+                                                    <Setter Property="Background" Value="{DynamicResource ColorPrimaryLight}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Category" Width="1.5*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ComboBox Margin="2,0" Height="40" VerticalAlignment="Center"
+                                                              IsEnabled="{Binding IsTestEditable}"
+                                                              Text="{Binding CategoryHeading, UpdateSourceTrigger=PropertyChanged}"
+                                                              IsEditable="True" IsTextSearchEnabled="True"
+                                                              ItemsSource="{Binding AllCategories, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTemplateColumn Header="Test Name" Width="2.6*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ComboBox Margin="2,0" Height="40" VerticalAlignment="Center"
+                                                              IsEnabled="{Binding IsTestEditable}"
+                                                              Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}"
+                                                              DisplayMemberPath="TestName"
+                                                              IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                                                              Loaded="TestNameCombo_Loaded"
+                                                              KeyUp="TestNameCombo_KeyUp"
+                                                              SelectionChanged="TestNameCombo_SelectionChanged">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <StackPanel Margin="0,2">
+                                                                    <TextBlock Text="{Binding TestName}" FontWeight="SemiBold" FontSize="14"/>
+                                                                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextSecondary}">
+                                                                        <Run Text="{Binding CategoryHeading, Mode=OneWay}"/>
+                                                                        <Run Text=" · Rs. "/>
+                                                                        <Run Text="{Binding Price, Mode=OneWay, StringFormat=N0}"/>
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="0.9*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="FontSize" Value="14"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ColorTextPrimary}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Reference Range" Binding="{Binding RangeText}" Width="1.4*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="FontSize" Value="14"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ColorTextPrimary}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Price" Binding="{Binding PriceText}" Width="1.1*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="FontSize" Value="14"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ColorTextPrimary}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="Discount" Width="1.35*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="2,0" VerticalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="68"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBox Height="40" FontWeight="SemiBold"
+                                                                 Text="{Binding Discount, UpdateSourceTrigger=PropertyChanged, StringFormat=0.##}"/>
+                                                        <ComboBox Grid.Column="1" Height="40" Margin="4,0,0,0"
+                                                                  SelectedValue="{Binding DiscountModeLabel, UpdateSourceTrigger=PropertyChanged}"
+                                                                  SelectedValuePath="Content">
+                                                            <ComboBoxItem Content="%"/>
+                                                            <ComboBoxItem Content="Rs"/>
+                                                        </ComboBox>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Net" Binding="{Binding NetText}" Width="0.8*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="FontSize" Value="14"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ColorTextPrimary}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="" Width="56">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button ToolTip="Remove" Padding="0" Width="34" Height="34" MinWidth="34" Margin="2,0"
+                                                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                            Style="{StaticResource DangerButton}"
+                                                            Click="btnRemoveThisRow_Click" Tag="{Binding}">
+                                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Grid Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="cmbPanels" Height="40" IsEditable="False"
+                                              DisplayMemberPath="SuggestionLabel"
+                                              ToolTip="Choose a panel package"/>
+                                    <Button Grid.Column="1" Height="40" Width="40" MinWidth="40" Margin="8,0,0,0" Padding="0"
+                                            Style="{StaticResource AccentButton}" ToolTip="Add Panel" Click="btnAddPanel_Click">
+                                        <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="2" x:Name="btnAddRow" Height="40" Width="40" MinWidth="40"
+                                            Margin="8,0,0,0" Padding="0" Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Add Individual Test" Click="btnAddRow_Click">
+                                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+
+                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Subtotal" FontSize="13.5" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"
+                                                   Foreground="{DynamicResource ColorTextSecondary}"/>
+                                        <TextBlock x:Name="txtSubtotalAmount" Text="Rs. 0" FontSize="15" FontWeight="Bold"
+                                                   VerticalAlignment="Center" Margin="0,0,14,0"
+                                                   Foreground="{DynamicResource ColorTextPrimary}"/>
+
+                                        <TextBlock Text="Disc %" FontSize="13.5" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"
+                                                   Foreground="{DynamicResource ColorTextSecondary}"/>
+                                        <TextBox x:Name="txtOverallDiscount" Width="52" Height="40" Text="0"
+                                                 HorizontalContentAlignment="Center" FontWeight="Bold"
+                                                 TextChanged="txtOverallDiscount_TextChanged"/>
+                                        <TextBlock x:Name="txtDiscountAmount" Text="-Rs. 0" FontSize="14.5" FontWeight="Bold"
+                                                   VerticalAlignment="Center" Margin="8,0,14,0"
+                                                   Foreground="{DynamicResource ColorDanger}"/>
+
+                                        <TextBlock Text="Payable" FontSize="13.5" FontWeight="Bold"
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"
+                                                   Foreground="{DynamicResource ColorTextPrimary}"/>
+                                        <TextBlock x:Name="txtTotalAmount" Text="Rs. 0" FontSize="18" FontWeight="Bold"
+                                                   VerticalAlignment="Center" Margin="0,0,12,0"
+                                                   Foreground="{DynamicResource ColorAccent}"/>
+
+                                        <Button x:Name="btnGenerateBill" Style="{StaticResource AccentButton}"
+                                                Height="40" Width="40" MinWidth="40" Padding="0"
+                                                ToolTip="Generate Bill" Click="btnGenerateBill_Click">
+                                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Button>
+                                        <Button x:Name="btnHoldBill" Style="{StaticResource SecondaryButton}"
+                                                Height="40" Width="40" MinWidth="40" Padding="0" Margin="8,0,0,0"
+                                                ToolTip="Hold Bill" Click="btnHoldBill_Click">
+                                            <TextBlock Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ================= HELD BILLS ================= -->
+                    <Grid Grid.Row="2" Margin="0,16,0,0">
+                        <Border Style="{StaticResource CardBackground}"/>
+                        <Border Style="{StaticResource CardContent}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock x:Name="txtHeldHeading" Text="Held Bills (0)" Style="{StaticResource SectionHeading}"/>
+                                    <TextBlock Text="Parked unfinished bills — resume when the emergency is done."
+                                               FontSize="13.5" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource ColorTextSecondary}" Margin="0,3,0,0"/>
+                                </StackPanel>
+
+                                <DataGrid Grid.Row="1" x:Name="dgHeldBills" AutoGenerateColumns="False" IsReadOnly="True"
+                                          MinHeight="80" MaxHeight="180" CanUserAddRows="False" RowHeight="48">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Held At" Binding="{Binding HeldAtDisplay}" Width="140"/>
+                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientDisplay}" Width="1.6*"/>
+                                        <DataGridTextColumn Header="Phone" Binding="{Binding PhoneNumber}" Width="120"/>
+                                        <DataGridTextColumn Header="Tests" Binding="{Binding TestSummary}" Width="2*"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="200">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Content="Resume" Style="{StaticResource AccentButton}"
+                                                                FontSize="11" Padding="10,3" Margin="0,0,6,0"
+                                                                Click="btnResumeHeld_Click" Tag="{Binding}"/>
+                                                        <Button Content="Discard" Style="{StaticResource DangerButton}"
+                                                                FontSize="11" Padding="10,3"
+                                                                Click="btnDiscardHeld_Click" Tag="{Binding}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Grid.Row="2" x:Name="txtHeldEmpty" Text="No held bills."
+                                           FontSize="12" Foreground="{DynamicResource ColorTextSecondary}" Margin="0,8,0,0"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                            </Grid>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem x:Name="tabPending" Header="Pending Results" Style="{StaticResource MainTabItem}">
+                    <!-- ================= PENDING RESULTS ================= -->
+                    <Grid Margin="4,4,4,4">
+                        <Border Style="{StaticResource CardBackground}"/>
+                        <Border Style="{StaticResource CardContent}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock x:Name="txtPendingHeading" Text="Pending Laboratory Results (0)"
+                                                   Style="{StaticResource SectionHeading}"/>
+                                        <TextBlock x:Name="txtPendingSubtitle" Text="Today's bills waiting for test results."
+                                                   FontSize="13.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource ColorTextSecondary}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Grid Grid.Column="1" Width="220" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <TextBox x:Name="txtPendingSearch" Height="42"
+                                                 TextChanged="txtPendingSearch_TextChanged"/>
+                                        <TextBlock Text="Search bill, name, phone, MR" IsHitTestVisible="False"
+                                                   Margin="14,0,8,0" VerticalAlignment="Center" FontSize="13.5"
+                                                   Foreground="{DynamicResource ColorTextSecondary}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Text, ElementName=txtPendingSearch}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                    <Button Grid.Column="2" x:Name="btnTogglePendingFilters" Style="{StaticResource SecondaryButton}"
+                                            Height="42" Width="42" Margin="10,0,0,0" Padding="0"
+                                            ToolTip="Show / hide filters" Click="btnTogglePendingFilters_Click">
+                                        <TextBlock Text="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="3" Content="Refresh" Style="{StaticResource SecondaryButton}"
+                                            Height="42" MinWidth="96" Margin="8,0,0,0" Padding="14,0"
+                                            VerticalAlignment="Center" Click="btnRefreshDashboards_Click"/>
+                                </Grid>
+
+                                <Border Grid.Row="1" x:Name="pnlPendingFilters" Visibility="Collapsed"
+                                        Background="{DynamicResource ColorPrimaryLight}" CornerRadius="10"
+                                        Padding="12,10" Margin="0,0,0,12"
+                                        BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1">
+                                    <StackPanel>
+                                        <WrapPanel Margin="0,0,0,8">
+                                            <RadioButton Focusable="False" x:Name="rbPendingYesterday" Content="Yesterday" GroupName="PendingDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PendingDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPendingToday" Content="Today" GroupName="PendingDate" IsChecked="True"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PendingDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPendingMonth" Content="This Month" GroupName="PendingDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PendingDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPendingCustom" Content="Custom Range" GroupName="PendingDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PendingDatePreset_Checked"/>
+                                        </WrapPanel>
+                                        <StackPanel x:Name="pnlPendingCustomDates" Orientation="Horizontal" Margin="0,0,0,8" Visibility="Collapsed">
+                                            <TextBlock Text="From" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource ColorTextPrimary}"/>
+                                            <DatePicker x:Name="dpPendingFrom" Width="150" Height="40" Margin="0,0,14,0"
+                                                        SelectedDateChanged="PendingFilter_Changed"/>
+                                            <TextBlock Text="To" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource ColorTextPrimary}"/>
+                                            <DatePicker x:Name="dpPendingTo" Width="150" Height="40"
+                                                        SelectedDateChanged="PendingFilter_Changed"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <ComboBox x:Name="cmbPendingDoctor" Width="200" Height="40" Margin="0,0,10,0"
+                                                      DisplayMemberPath="Name" SelectionChanged="PendingFilter_Changed"/>
+                                            <TextBox x:Name="txtPendingPatient" Width="200" Height="40"
+                                                     TextChanged="txtPendingSearch_TextChanged"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <DataGrid Grid.Row="2" x:Name="dgPending" AutoGenerateColumns="False" IsReadOnly="True"
+                                          MinHeight="160" VerticalAlignment="Stretch"
+                                          CanUserAddRows="False" RowHeight="52">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Bill No" Binding="{Binding SerialNumber}" Width="100"/>
+                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="1.2*"/>
+                                        <DataGridTextColumn Header="Doctor" Binding="{Binding ReferredBy}" Width="1*"/>
+                                        <DataGridTextColumn Header="Tests" Binding="{Binding TestSummary}" Width="1.6*"/>
+                                        <DataGridTextColumn Header="Registered" Binding="{Binding CreatedAtDisplay}" Width="140"/>
+                                        <DataGridTextColumn Header="Net" Binding="{Binding NetAmount, StringFormat=N0}" Width="80"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="220">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Content="Enter Results" Style="{StaticResource AccentButton}"
+                                                                FontSize="13" Height="34" Padding="10,0" Margin="0,0,8,0"
+                                                                Click="btnEnterResultsRow_Click" Tag="{Binding}"/>
+                                                        <Button Content="Refund" Style="{StaticResource DangerButton}"
+                                                                FontSize="13" Height="34" Padding="10,0"
+                                                                Click="btnRefundBill_Click" Tag="{Binding}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Grid.Row="3" x:Name="txtPendingEmpty" Text="No pending bills for the selected filters."
+                                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextSecondary}" Margin="0,10,0,0"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    </TabItem>
+
+                    <TabItem x:Name="tabReports" Header="Reports" Style="{StaticResource MainTabItem}">
+                    <!-- ================= REPORTS / PRINT HISTORY ================= -->
+                    <Grid Margin="4,4,4,4">
+                        <Border Style="{StaticResource CardBackground}"/>
+                        <Border Style="{StaticResource CardContent}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock x:Name="txtPrintHeading" Text="Reports Awaiting / History (0)"
+                                                   Style="{StaticResource SectionHeading}"/>
+                                        <TextBlock x:Name="txtPrintSubtitle" Text="Today's completed reports — filter for full history."
+                                                   FontSize="13.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource ColorTextSecondary}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" x:Name="btnTogglePrintFilters" Style="{StaticResource SecondaryButton}"
+                                            Height="42" Width="42" Margin="0,0,8,0" Padding="0"
+                                            ToolTip="Show / hide filters" Click="btnTogglePrintFilters_Click">
+                                        <TextBlock Text="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="2" x:Name="btnPrintAll" Style="{StaticResource AccentButton}"
+                                            Height="42" Width="42" MinWidth="42" Padding="0"
+                                            ToolTip="Print Unprinted" Click="btnPrintAll_Click">
+                                        <TextBlock Text="&#xE749;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+
+                                <Border Grid.Row="1" x:Name="pnlPrintFilters" Visibility="Collapsed"
+                                        Background="{DynamicResource ColorPrimaryLight}" CornerRadius="10"
+                                        Padding="12,10" Margin="0,0,0,12"
+                                        BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <Grid Width="240">
+                                                <TextBox x:Name="txtPrintSearch" Height="40" TextChanged="txtPrintSearch_TextChanged"/>
+                                                <TextBlock Text="Search report, name, phone, MR" IsHitTestVisible="False"
+                                                           Margin="14,0,8,0" VerticalAlignment="Center" FontSize="13"
+                                                           Foreground="{DynamicResource ColorTextSecondary}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=txtPrintSearch}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </StackPanel>
+                                        <WrapPanel Margin="0,0,0,8">
+                                            <RadioButton Focusable="False" x:Name="rbPrintYesterday" Content="Yesterday" GroupName="PrintDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PrintDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPrintToday" Content="Today" GroupName="PrintDate" IsChecked="True"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PrintDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPrintMonth" Content="This Month" GroupName="PrintDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PrintDatePreset_Checked"/>
+                                            <RadioButton Focusable="False" x:Name="rbPrintCustom" Content="Custom Range" GroupName="PrintDate"
+                                                         Margin="0,0,14,6" FontWeight="SemiBold"
+                                                         Foreground="{DynamicResource ColorTextPrimary}"
+                                                         Checked="PrintDatePreset_Checked"/>
+                                        </WrapPanel>
+                                        <StackPanel x:Name="pnlPrintCustomDates" Orientation="Horizontal" Margin="0,0,0,8" Visibility="Collapsed">
+                                            <TextBlock Text="From" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource ColorTextPrimary}"/>
+                                            <DatePicker x:Name="dpPrintFrom" Width="150" Height="40" Margin="0,0,14,0"
+                                                        SelectedDateChanged="PrintFilter_Changed"/>
+                                            <TextBlock Text="To" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource ColorTextPrimary}"/>
+                                            <DatePicker x:Name="dpPrintTo" Width="150" Height="40"
+                                                        SelectedDateChanged="PrintFilter_Changed"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <ComboBox x:Name="cmbPrintDoctor" Width="200" Height="40" Margin="0,0,10,0"
+                                                      DisplayMemberPath="Name" SelectionChanged="PrintFilter_Changed"/>
+                                            <TextBox x:Name="txtPrintPatient" Width="200" Height="40"
+                                                     TextChanged="txtPrintSearch_TextChanged"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <DataGrid Grid.Row="2" x:Name="dgPrintQueue" AutoGenerateColumns="False" IsReadOnly="True"
+                                          MinHeight="160" VerticalAlignment="Stretch"
+                                          CanUserAddRows="False" RowHeight="52">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Report No" Binding="{Binding SerialNumber}" Width="100"/>
+                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="1.2*"/>
+                                        <DataGridTextColumn Header="Doctor" Binding="{Binding ReferredBy}" Width="1*"/>
+                                        <DataGridTextColumn Header="Tests" Binding="{Binding TestSummary}" Width="1.5*"/>
+                                        <DataGridTextColumn Header="Report Date" Binding="{Binding CreatedAtDisplay}" Width="140"/>
+                                        <DataGridTextColumn Header="Print" Binding="{Binding PrintStatus}" Width="90"/>
+                                        <DataGridTemplateColumn Header="" Width="96">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button ToolTip="Preview" Style="{StaticResource SecondaryButton}"
+                                                                Width="34" Height="34" MinWidth="34" Padding="0" Margin="0,0,8,0"
+                                                                Click="btnPreviewReport_Click" Tag="{Binding}">
+                                                            <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Button>
+                                                        <Button ToolTip="Print" Style="{StaticResource AccentButton}"
+                                                                Width="34" Height="34" MinWidth="34" Padding="0"
+                                                                Click="btnPrintReport_Click" Tag="{Binding}">
+                                                            <TextBlock Text="&#xE749;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Grid.Row="3" x:Name="txtPrintEmpty" Text="No completed reports for the selected filters."
+                                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextSecondary}" Margin="0,10,0,0"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    </TabItem>
+                </TabControl>
+
+                <TextBlock x:Name="txtStatus" Grid.Row="1" Margin="8,10,8,0" TextWrapping="Wrap"
+                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextPrimary}"/>
             </Grid>
-
-            <!-- ================= ACTIONS ================= -->
-            <Grid Grid.Row="3" Margin="20,16,20,20">
-                <Border Style="{StaticResource CardBackground}"/>
-                <Border Style="{StaticResource CardContent}">
-                    <StackPanel>
-                        <TextBlock Text="Actions" Style="{StaticResource SectionHeading}" Margin="0,0,0,10"/>
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="btnGenerateBill" Content="Generate Bill" Style="{StaticResource AccentButton}"
-                                    FontSize="13" Click="btnGenerateBill_Click"/>
-                            <Button x:Name="btnEnterResults" Content="Pending Reports (Enter Results)" Style="{StaticResource AccentButton}"
-                                    Margin="10,0,0,0" Click="btnEnterResults_Click"/>
-                            <Button x:Name="btnHistory" Content="View Past Reports" Style="{StaticResource SecondaryButton}"
-                                    Margin="10,0,0,0" Click="btnHistory_Click"/>
-                            <Button x:Name="btnClear" Content="Clear Form" Style="{StaticResource SecondaryButton}"
-                                    Margin="10,0,0,0" Click="btnClear_Click"/>
-                            <Button x:Name="btnBackupNow" Content="Backup Now" Style="{StaticResource SecondaryButton}"
-                                    Margin="10,0,0,0" Click="btnBackupNow_Click"/>
-                            <Button x:Name="btnRestoreBackup" Content="Restore from Backup..." Style="{StaticResource DangerButton}"
-                                    Margin="10,0,0,0" Click="btnRestoreBackup_Click"/>
-                        </StackPanel>
-
-                        <TextBlock x:Name="txtStatus" Margin="0,14,0,0" TextWrapping="Wrap" FontSize="12"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
         </Grid>
-    </ScrollViewer>
+    </Grid>
 </Window>

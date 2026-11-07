@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using LabReportApp.Database;
 using LabReportApp.Services;
@@ -13,6 +15,14 @@ namespace LabReportApp
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // A click anywhere on a dropdown opens its list, including editable boxes
+            // and dropdowns inside a table (the first click would otherwise only select the row).
+            EventManager.RegisterClassHandler(
+                typeof(ComboBox),
+                UIElement.PreviewMouseLeftButtonDownEvent,
+                new MouseButtonEventHandler(ComboBox_OpenOnClick),
+                handledEventsToo: true);
 
             // Catch ANY unhandled exception anywhere in the app and show it in a message box,
             // instead of the app silently crashing with no visible error (which is what a plain
@@ -28,6 +38,7 @@ namespace LabReportApp
                 // QuestPDF is free for small companies/individuals under the Community license.
                 // Read the license terms here: https://www.questpdf.com/license/
                 QuestPDF.Settings.License = LicenseType.Community;
+                PdfFontRegistry.Ensure();
 
                 // Make sure the local SQLite database and tables exist before the app runs.
                 DatabaseHelper.InitializeDatabase();
@@ -49,6 +60,21 @@ namespace LabReportApp
                 ShowFatalError("Startup", ex);
                 Shutdown();
             }
+        }
+
+        private static void ComboBox_OpenOnClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not ComboBox combo || !combo.IsEnabled || combo.IsDropDownOpen)
+                return;
+
+            // Open after this click finishes, so the list does not close again immediately.
+            combo.Dispatcher.BeginInvoke(() =>
+            {
+                if (!combo.IsEnabled || combo.IsDropDownOpen)
+                    return;
+                combo.Focus();
+                combo.IsDropDownOpen = true;
+            }, DispatcherPriority.Input);
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

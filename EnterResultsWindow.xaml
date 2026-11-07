@@ -1,8 +1,8 @@
 <Window x:Class="LabReportApp.EnterResultsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Enter Test Results" Height="700" Width="950"
-        MinHeight="500" MinWidth="750" WindowStartupLocation="CenterScreen"
+        Title="Enter Test Results" Height="740" Width="1050"
+        MinHeight="520" MinWidth="820" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource ColorBackground}">
     <Grid>
         <Grid.RowDefinitions>
@@ -10,11 +10,11 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ================= HEADER BANNER ================= -->
         <Border Grid.Row="0" Background="{DynamicResource ColorBannerBg}" Padding="24,16">
             <StackPanel>
-                <TextBlock Text="Enter Test Results" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                <TextBlock x:Name="txtPatientSummary" FontSize="12" Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,3,0,0"/>
+                <TextBlock Text="Enter Test Results" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock x:Name="txtPatientSummary" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,4,0,0"/>
+                <TextBlock x:Name="txtDemographics" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
@@ -28,13 +28,34 @@
             <Grid Grid.Row="0">
                 <Border Style="{StaticResource CardBackground}"/>
                 <Border Style="{StaticResource CardContent}">
-                    <DataGrid x:Name="dgResults" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <DataGrid x:Name="dgResults" AutoGenerateColumns="False" CanUserAddRows="False"
+                              EnableRowVirtualization="False"
+                              KeyboardNavigation.TabNavigation="None"
+                              RowHeight="48">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Category" Binding="{Binding CategoryHeading}" IsReadOnly="True" Width="2*"/>
-                            <DataGridTextColumn Header="Test Name" Binding="{Binding TestName}" IsReadOnly="True" Width="2.3*"/>
-                            <DataGridTextColumn Header="Result *" Binding="{Binding Result}" Width="1.8*"/>
-                            <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" IsReadOnly="True" Width="1.3*"/>
-                            <DataGridTextColumn Header="Normal Range" Binding="{Binding NormalRange}" IsReadOnly="True" Width="1.8*"/>
+                            <DataGridTextColumn Header="Category" Binding="{Binding CategoryHeading}" IsReadOnly="True" Width="1.5*"/>
+                            <DataGridTextColumn Header="Test Parameter" Binding="{Binding TestName}" IsReadOnly="True" Width="2*"/>
+                            <DataGridTemplateColumn Header="Result *" Width="1.3*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Result, UpdateSourceTrigger=PropertyChanged}"
+                                                 Height="36" Margin="2,0" VerticalAlignment="Center"
+                                                 Tag="ResultInput" Cursor="IBeam"
+                                                 PreviewMouseLeftButtonDown="ResultInput_PreviewMouseLeftButtonDown"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" IsReadOnly="True" Width="1*"/>
+                            <DataGridTextColumn Header="Reference Range" Binding="{Binding NormalRange}" IsReadOnly="True" Width="1.8*"/>
+                            <DataGridTemplateColumn Header="Status" Width="1.2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding AbnormalFlag}" FontWeight="SemiBold"
+                                                   Foreground="{Binding StatusBrush}"
+                                                   VerticalAlignment="Center" Margin="6,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>

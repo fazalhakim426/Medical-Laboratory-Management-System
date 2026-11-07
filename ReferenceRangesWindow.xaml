@@ -1,0 +1,133 @@
+<Window x:Class="LabReportApp.ReferenceRangesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Reference Ranges" Height="720" Width="980"
+        MinHeight="560" MinWidth="820" WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource ColorBackground}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource ColorBannerBg}" Padding="24,16">
+            <StackPanel>
+                <TextBlock x:Name="txtHeader" Text="Reference Ranges" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="ILLUSTRATIVE / lab-configured intervals by age, gender and pregnancy. Production values must be approved by the lab."
+                           FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Border Style="{StaticResource CardBackground}"/>
+                <Border Style="{StaticResource CardContent}">
+                    <StackPanel>
+                        <TextBlock Text="Add / Edit Range" Style="{StaticResource SectionHeading}" Margin="0,0,0,8"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="4">
+                                <TextBlock Text="AGE MIN (DAYS)" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtAgeMin" Height="42" ToolTip="Leave blank for no lower bound"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="4">
+                                <TextBlock Text="AGE MAX (DAYS)" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtAgeMax" Height="42" ToolTip="Leave blank for no upper bound. 365≈1y, 30≈1mo"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="4">
+                                <TextBlock Text="GENDER" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="cmbGender" Height="42" SelectedIndex="0">
+                                    <ComboBoxItem Content="Both"/>
+                                    <ComboBoxItem Content="Male"/>
+                                    <ComboBoxItem Content="Female"/>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="3" Margin="4">
+                                <TextBlock Text="PREGNANCY" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="cmbPregnancy" Height="42" SelectedIndex="0">
+                                    <ComboBoxItem Content="Not Applicable"/>
+                                    <ComboBoxItem Content="Pregnant"/>
+                                    <ComboBoxItem Content="Non-Pregnant"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="4">
+                                <TextBlock Text="MIN VALUE" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtMinValue" Height="42" ToolTip="Blank for qualitative ranges"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="4">
+                                <TextBlock Text="MAX VALUE" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtMaxValue" Height="42"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="4">
+                                <TextBlock Text="UNIT" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtUnit" Height="42"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="3" Margin="4">
+                                <TextBlock Text="METHODOLOGY" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtMethodology" Height="42"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="4">
+                                <TextBlock Text="REFERENCE TEXT (shown on report)" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtReferenceText" Height="42"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="3" Margin="4" VerticalAlignment="Bottom">
+                                <CheckBox x:Name="chkActive" Content="Active" IsChecked="True" Margin="0,0,0,8"
+                                          Foreground="{DynamicResource ColorTextPrimary}" FontSize="14"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="4,10,0,0">
+                            <Button Content="Save Range" Style="{StaticResource AccentButton}" Click="btnSave_Click"/>
+                            <Button Content="Clear Form" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Click="btnClear_Click"/>
+                            <Button Content="Import CSV..." Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Click="btnImport_Click"/>
+                            <Button Content="Export CSV..." Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Click="btnExport_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Border Style="{StaticResource CardBackground}"/>
+                <Border Padding="10">
+                    <DataGrid x:Name="dgRanges" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0"
+                              SelectionChanged="dgRanges_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Age Group" Binding="{Binding AgeGroupLabel}" Width="1.4*"/>
+                            <DataGridTextColumn Header="Gender" Binding="{Binding Gender}" Width="0.8*"/>
+                            <DataGridTextColumn Header="Pregnancy" Binding="{Binding PregnancyStatus}" Width="1.1*"/>
+                            <DataGridTextColumn Header="Min" Binding="{Binding MinValue}" Width="0.7*"/>
+                            <DataGridTextColumn Header="Max" Binding="{Binding MaxValue}" Width="0.7*"/>
+                            <DataGridTextColumn Header="Reference Text" Binding="{Binding ReferenceText}" Width="1.8*"/>
+                            <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="0.8*"/>
+                            <DataGridTextColumn Header="Active" Binding="{Binding IsActive}" Width="0.6*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
+                <Button Content="Delete Selected" Style="{StaticResource DangerButton}" Click="btnDelete_Click"/>
+                <Button Content="Close" Style="{StaticResource SecondaryButton}" Margin="10,0,0,0" Click="btnClose_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

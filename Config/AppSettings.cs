@@ -7,7 +7,8 @@ namespace LabReportApp.Config
     /// </summary>
     public static class AppSettings
     {
-        // ---------- LAB DETAILS (shown in the PDF footer) ----------
+        // Fallback hospital details used only when Settings has no hospital identity yet.
+        // They never replace the Lab ProX name, logo, or WhatsApp number.
         public const string LabName = "Your LAB Name Here";
         public const string LabAddress = "Your Lab Address Here";
         public const string LabContact = "Your Lab Contact Info Here (phone/email/website)";
@@ -43,14 +44,17 @@ namespace LabReportApp.Config
         // public const bool EnableSmsSending = true;
 
         // Set to false if you don't want the app to attempt FTP upload (e.g. testing offline).
-        public const bool EnableCloudUpload = true;
+        // static readonly (not const) so the compiler still type-checks the upload path when this is true.
+        public static readonly bool EnableCloudUpload = true;
 
         // ---------- BACKUP SETTINGS ----------
         // IMPORTANT: point BackupFolder at a location that is PHYSICALLY SEPARATE from this PC's
         // main drive - e.g. a USB flash drive (like "E:\LabBackups"), an external hard drive,
         // or a second internal drive. If this PC's main drive fails, a backup on the SAME drive
         // won't help you. A USB drive that's always plugged in is the simplest reliable option.
-        public const string BackupFolder = @"G:\LabReportBackups";
+        // G: was unavailable on this PC — using a local folder. Point this back to a USB/external
+        // drive (e.g. @"G:\LabReportBackups") when one is available for safer disaster recovery.
+        public const string BackupFolder = @"F:\www\Medical-Laboratory-Management-System\Backups";
 
         // OPTIONAL second backup location for extra safety - e.g. a OneDrive or Google Drive
         // desktop-sync folder path (so backups automatically also go to the cloud whenever
@@ -62,6 +66,7 @@ namespace LabReportApp.Config
         public const int MaxDatabaseBackupsToKeep = 30;
 
         // Master switch for the whole backup system.
-        public const bool EnableAutoBackup = true;
+        // static readonly (not const) so the compiler still type-checks the backup path when this is true.
+        public static readonly bool EnableAutoBackup = true;
     }
 }

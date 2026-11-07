@@ -1,4 +1,4 @@
-# Lab Report Management System — Setup Guide (VS Code)
+﻿# Lab ProX — Setup Guide (VS Code)
 
 ## STEP 1 — Install required software (one-time)
 
@@ -21,8 +21,8 @@
 
 ## STEP 2 — Open the project
 
-1. Extract the ZIP file you were given, you should have a folder named `LabReportApp`.
-2. Open VS Code → File → Open Folder → select the `LabReportApp` folder.
+1. Extract the ZIP file you were given, you should have the project folder.
+2. Open VS Code → File → Open Folder → select that folder.
 
 ## STEP 3 — Restore NuGet packages (external libraries)
 
@@ -69,7 +69,7 @@ The Lab Report window should open.
 2. Fill the test rows: Test Name, Result, Unit, Normal Range. Click **Add Row** for more.
 3. Click **Save, Generate PDF, Upload & Send SMS**.
 4. The app will:
-   - Save the record with a unique serial number (e.g. LAB-000001) into the local database (`LabReports.db`, created automatically next to the .exe)
+   - Save the record with a unique serial number (e.g. LAB-000001) into the local database (`LabProX.db`, created automatically next to the .exe)
    - Generate a PDF in the `Reports` folder, with a QR code linking to the online copy
    - Upload the PDF to your website via FTP (if enabled)
    - Send an SMS with the download link to the patient's phone (if enabled)
@@ -94,8 +94,8 @@ Copy that whole `publish` folder to the lab's PC — no need to install .NET or 
 ## Project Structure
 
 ```
-LabReportApp/
-├── LabReportApp.csproj        → Project file (lists all dependencies)
+LabProX/
+├── LabProX.csproj             → Project file (lists all dependencies)
 ├── App.xaml / App.xaml.cs     → App startup, initializes database
 ├── MainWindow.xaml(.cs)       → Main data-entry screen
 ├── HistoryWindow.xaml(.cs)    → View past reports
@@ -133,3 +133,58 @@ Listed here so you know what they are and can look up their docs if needed:
 2. **An SMS gateway account** — e.g. a local provider (Whitesms.pk, SMSAlert.pk) or Twilio. You'll get an API URL/key from them to put into `AppSettings.cs`.
 
 > Important note on QuestPDF licensing: this project uses QuestPDF's **Community license** (free), which is free for companies with less than $1M annual gross revenue — this covers the vast majority of small labs, but please read https://www.questpdf.com/license/ to confirm it applies to you.
+
+---
+
+## Development & Deployment Commands
+
+Run these from the project folder (e.g. `F:\www\Medical-Laboratory-Management-System`).
+
+> WPF apps only run on **Windows**.
+
+### Development (daily)
+
+```powershell
+# Check .NET 8 is installed
+dotnet --version
+
+# Download NuGet packages
+dotnet restore
+
+# Build
+dotnet build
+
+# Run (opens the WPF window)
+dotnet run
+```
+
+Faster loop after a successful build:
+
+```powershell
+dotnet build
+dotnet run --no-build
+```
+
+Edit lab settings in `Config\AppSettings.cs` before real use (lab name, FTP, backup path, etc.).
+
+### Deployment (lab PC)
+
+Self-contained single-file `.exe` (no .NET install needed on the lab PC):
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+Output folder:
+
+```text
+bin\Release\net8.0-windows\win-x64\publish\
+```
+
+Copy that whole `publish` folder to the lab PC and run `LabProX.exe`.
+
+Framework-dependent (smaller; requires .NET 8 Desktop Runtime on the PC):
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained false
+```

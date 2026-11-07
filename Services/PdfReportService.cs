@@ -5,139 +5,179 @@ using System.Linq;
 using LabReportApp.Config;
 using LabReportApp.Models;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace LabReportApp.Services
 {
     public static class PdfReportService
     {
-        /// <summary>
-        /// Builds the PDF report for a patient and saves it locally. Test results are grouped
-        /// by their CategoryHeading, so a single report can show multiple category sections
-        /// (e.g. "Complete Blood Count", "Liver Function Tests", "Kidney Function Tests"),
-        /// each with its own heading and its own table of tests.
-        /// Returns the full local file path of the generated PDF.
-        /// </summary>
         public static string GenerateReport(Patient patient, List<TestResultItem> results, byte[] qrPngBytes)
         {
             string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppSettings.LocalReportsFolder);
             Directory.CreateDirectory(folder);
             string filePath = Path.Combine(folder, $"{patient.SerialNumber}.pdf");
 
-            // Group the flat list of results into categories, preserving the order in which
-            // each category first appeared (so the report reads in the order it was entered).
-            var groupedByCategory = results
-                .GroupBy(r => string.IsNullOrWhiteSpace(r.CategoryHeading) ? "General" : r.CategoryHeading)
+            var settings = LabProXSettingsStore.Current;
+            BuildDocument(patient, results, qrPngBytes, settings.Report, settings.Customer).GeneratePdf(filePath);
+            return filePath;
+        }
+
+        public static IDocument BuildDocument(
+            Patient patient,
+            List<TestResultItem> results,
+            byte[] qrPngBytes,
+            PdfTemplateSettings template,
+            CustomerBranding branding)
+        {
+            var ctx = PdfDocumentComposer.CreateFor(template, branding, patient, qrPngBytes);
+            var resultRows = results.Where(row => row.IsResultRow).ToList();
+            var grouped = resultRows
+                .GroupBy(row => string.IsNullOrWhiteSpace(row.CategoryHeading) ? "General" : row.CategoryHeading)
                 .ToList();
 
-            Document.Create(container =>
+            IEnumerable<IGrouping<string, TestResultItem>> sections = ctx.Template.ShowCategoryHeadings
+                ? grouped
+                : resultRows.GroupBy(_ => "");
+
+            return Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(30);
-                    page.DefaultTextStyle(x => x.FontSize(10));
+                    PdfDocumentComposer.ApplyPage(page, ctx);
+                    PdfDocumentComposer.ComposeHeader(page, ctx);
 
-                    // ---------------- HEADER ----------------
-                    page.Header().Column(col =>
+                    page.Content().PaddingVertical(ctx.Narrow ? 4 : 8).Column(col =>
                     {
-                        col.Item().Row(row =>
+                        var fields = new List<(string Label, string Value)>();
+                        if (ctx.Template.ShowSerial) fields.Add(("Serial No", patient.SerialNumber));
+                        if (ctx.Template.ShowDate) fields.Add(("Date", patient.CreatedAt.ToString("dd-MMM-yyyy hh:mm tt")));
+                        if (ctx.Template.ShowPatientName) fields.Add(("Patient Name", patient.Name));
+                        if (ctx.Template.ShowAgeGender) fields.Add(("Age/Gender", $"{patient.AgeDisplay} / {patient.Gender}"));
+                        if (ctx.Template.ShowPhone) fields.Add(("Contact No", patient.PhoneNumber));
+                        if (ctx.Template.ShowCnic) fields.Add(("CNIC", patient.Cnic));
+                        if (ctx.Template.ShowReferredBy) fields.Add(("Referred By", patient.ReferredBy));
+                        if (ctx.Template.ShowPregnancy &&
+                            !string.IsNullOrWhiteSpace(patient.PregnancyStatus) &&
+                            !string.Equals(patient.PregnancyStatus, "Not Applicable", StringComparison.OrdinalIgnoreCase))
                         {
-                            row.RelativeItem().Column(c =>
-                            {
-                                c.Item().Text(patient.LabName == "" ? AppSettings.LabName : patient.LabName)
-                                    .FontSize(18).Bold();
-                                c.Item().Text("Blood Test Laboratory Report ABC").FontSize(11).Italic();
-                            });
+                            fields.Add(("Pregnancy", patient.PregnancyStatus));
+                        }
+                        PdfDocumentComposer.ComposeFields(col, ctx, fields);
 
-                            row.ConstantItem(90).Height(90).Image(qrPngBytes); // QR code top-right
-                        });
-
-                        col.Item().PaddingTop(5).LineHorizontal(1);
-                    });
-
-                    // ---------------- CONTENT ----------------
-                    page.Content().PaddingVertical(10).Column(col =>
-                    {
-                        // Patient details block
-                        col.Item().Border(1).Padding(8).Column(details =>
+                        foreach (var group in sections)
                         {
-                            details.Item().Row(r =>
+                            if (ctx.Template.ShowCategoryHeadings && !string.IsNullOrWhiteSpace(group.Key))
                             {
-                                r.RelativeItem().Text(t => { t.Span("Serial No: ").Bold(); t.Span(patient.SerialNumber); });
-                                r.RelativeItem().Text(t => { t.Span("Date: ").Bold(); t.Span(patient.CreatedAt.ToString("dd-MMM-yyyy hh:mm tt")); });
-                            });
-                            details.Item().Row(r =>
-                            {
-                                r.RelativeItem().Text(t => { t.Span("Patient Name: ").Bold(); t.Span(patient.Name); });
-                                r.RelativeItem().Text(t => { t.Span("Age/Gender: ").Bold(); t.Span($"{patient.Age} / {patient.Gender}"); });
-                            });
-                            details.Item().Row(r =>
-                            {
-                                r.RelativeItem().Text(t => { t.Span("Referred By: ").Bold(); t.Span(patient.ReferredBy); });
-                                r.RelativeItem().Text(t => { t.Span("Contact No: ").Bold(); t.Span(patient.PhoneNumber); });
-                            });
-                        });
-
-                        // One heading + one table PER CATEGORY
-                        foreach (var group in groupedByCategory)
-                        {
-                            col.Item().PaddingTop(15).Text(group.Key)
-                                .FontSize(14).Bold().FontColor(Colors.Blue.Darken2);
-
-                            col.Item().PaddingTop(8).Table(table =>
-                            {
-                                table.ColumnsDefinition(columns =>
+                                col.Item().PaddingTop(PdfDocumentComposer.Mm(ctx.Template.SectionSpacingMm + 1)).Text(text =>
                                 {
-                                    columns.RelativeColumn(3); // Test Name
-                                    columns.RelativeColumn(2); // Result
-                                    columns.RelativeColumn(2); // Unit
-                                    columns.RelativeColumn(3); // Normal Range
+                                    var span = text.Span(group.Key)
+                                        .FontFamily(ctx.HeadingFont)
+                                        .FontSize(ctx.Narrow ? Math.Min(ctx.HeadingSize, 11) : Math.Min(ctx.HeadingSize, 14))
+                                        .FontColor(ctx.AccentColor);
+                                    if (ctx.UseHeadingBold)
+                                        span.Bold();
+                                });
+                            }
+
+                            var columns = ReportColumns(ctx);
+                            col.Item().PaddingTop(PdfDocumentComposer.Mm(Math.Max(1, ctx.Template.SectionSpacingMm))).Table(table =>
+                            {
+                                table.ColumnsDefinition(definition =>
+                                {
+                                    foreach (var column in columns)
+                                        definition.RelativeColumn(column.Weight);
                                 });
 
                                 table.Header(header =>
                                 {
-                                    header.Cell().Element(HeaderCell).Text("Test Name");
-                                    header.Cell().Element(HeaderCell).Text("Result");
-                                    header.Cell().Element(HeaderCell).Text("Unit");
-                                    header.Cell().Element(HeaderCell).Text("Normal Range");
-
-                                    static IContainer HeaderCell(IContainer c) =>
-                                        c.Background(Colors.Grey.Lighten2).Padding(5).DefaultTextStyle(x => x.Bold());
+                                    foreach (var column in columns)
+                                    {
+                                        var cell = header.Cell().Element(c => PdfDocumentComposer.HeaderCell(c, ctx));
+                                        if (column.Right)
+                                            cell.AlignRight().Text(column.Header);
+                                        else
+                                            cell.Text(column.Header);
+                                    }
                                 });
 
                                 foreach (var row in group)
                                 {
-                                    table.Cell().Element(BodyCell).Text(row.TestName);
-                                    table.Cell().Element(BodyCell).Text(row.Result);
-                                    table.Cell().Element(BodyCell).Text(row.Unit);
-                                    table.Cell().Element(BodyCell).Text(row.NormalRange);
+                                    foreach (var column in columns)
+                                    {
+                                        var cell = table.Cell().Element(c => PdfDocumentComposer.BodyCell(c, ctx));
+                                        if (column.Header == "Status")
+                                        {
+                                            string flag = row.AbnormalFlag ?? "";
+                                            var status = cell.Text(flag);
+                                            if (flag is "LOW" or "HIGH")
+                                            {
+                                                status.FontColor(Color.FromHex("#B91C1C"));
+                                                if (ctx.UseBodyBold)
+                                                    status.Bold();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            string value = column.Value(row);
+                                            if (column.Right)
+                                                cell.AlignRight().Text(value);
+                                            else
+                                                cell.Text(value);
+                                        }
+                                    }
                                 }
-
-                                static IContainer BodyCell(IContainer c) =>
-                                    c.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(5);
                             });
                         }
 
-                        col.Item().PaddingTop(20).Text("-- End of Report --")
-                            .FontSize(9).Italic().FontColor(Colors.Grey.Darken1);
+                        PdfDocumentComposer.ComposeClosing(col, ctx);
+
+                        if (ctx.Template.ShowEndOfReport)
+                        {
+                            col.Item().PaddingTop(PdfDocumentComposer.Mm(ctx.Template.SectionSpacingMm + 1)).AlignCenter().Text(text =>
+                            {
+                                var span = text.Span("— End of Report —")
+                                    .FontSize(Math.Max(7, ctx.BodySize - 1))
+                                    .FontColor(ctx.MutedColor);
+                                if (ctx.UseItalic)
+                                    span.Italic();
+                            });
+                        }
                     });
 
-                    // ---------------- FOOTER ----------------
-                    page.Footer().Column(col =>
-                    {
-                        col.Item().LineHorizontal(1);
-                        col.Item().PaddingTop(5).AlignCenter().Text(AppSettings.LabAddress).FontSize(9);
-                        col.Item().AlignCenter().Text(AppSettings.LabContact).FontSize(9);
-                        col.Item().AlignCenter().Text("Scan the QR code above to view/download this report online.")
-                            .FontSize(8).Italic();
-                    });
+                    PdfDocumentComposer.ComposeFooter(page, ctx);
                 });
-            })
-            .GeneratePdf(filePath);
+            });
+        }
 
-            return filePath;
+        private static List<(string Header, float Weight, bool Right, Func<TestResultItem, string> Value)> ReportColumns(PdfRenderContext ctx)
+        {
+            var template = ctx.Template;
+            bool unitColumn = template.ShowUnit && !ctx.VeryNarrow;
+            bool rangeColumn = template.ShowReferenceRange && ctx.Template.PaperWidthMm >= 130;
+            bool statusColumn = template.ShowStatus;
+
+            string ResultText(TestResultItem row)
+            {
+                string text = row.Result ?? "";
+                if (!unitColumn && template.ShowUnit && !string.IsNullOrWhiteSpace(row.Unit))
+                    text = string.IsNullOrWhiteSpace(text) ? row.Unit : text + " " + row.Unit;
+                if (!rangeColumn && template.ShowReferenceRange && !string.IsNullOrWhiteSpace(row.NormalRange))
+                    text = string.IsNullOrWhiteSpace(text) ? row.NormalRange : text + "\n" + row.NormalRange;
+                return text;
+            }
+
+            var columns = new List<(string Header, float Weight, bool Right, Func<TestResultItem, string> Value)>
+            {
+                ("Test Name", 2.6f, false, row => row.TestName),
+                ("Result", 1.6f, false, ResultText)
+            };
+            if (unitColumn)
+                columns.Add(("Unit", 1.2f, false, row => row.Unit));
+            if (rangeColumn)
+                columns.Add(("Reference Range", 2.2f, false, row => row.NormalRange));
+            if (statusColumn)
+                columns.Add(("Status", 1.3f, false, row => row.AbnormalFlag ?? ""));
+            return columns;
         }
     }
 }

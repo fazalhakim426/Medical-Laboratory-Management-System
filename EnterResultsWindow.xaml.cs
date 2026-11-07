@@ -1,8 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using LabReportApp.Config;
 using LabReportApp.Database;
 using LabReportApp.Models;
@@ -18,6 +23,7 @@ namespace LabReportApp
         public EnterResultsWindow(int patientId)
         {
             InitializeComponent();
+            dgResults.AddHandler(PreviewKeyDownEvent, new KeyEventHandler(dgResults_PreviewKeyDown), handledEventsToo: true);
             SourceInitialized += (s, e) => TitleBarHelper.ApplyTitleBarTheme(this, ThemeManager.CurrentTheme == "Dark");
 
             var loaded = DatabaseHelper.GetPatientById(patientId);
@@ -25,7 +31,7 @@ namespace LabReportApp
             {
                 MessageBox.Show("This patient could not be found (it may have been removed).",
                     "Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
-                _patient = new Patient(); // keeps the compiler happy; window closes right after
+                _patient = new Patient();
                 Loaded += (_, _) => Close();
                 return;
             }
@@ -33,12 +39,127 @@ namespace LabReportApp
             _patient = loaded;
 
             txtPatientSummary.Text =
-                $"{_patient.SerialNumber}  |  {_patient.Name}  ({_patient.Age} / {_patient.Gender})  |  {_patient.PhoneNumber}";
+                $"{_patient.SerialNumber}  |  {_patient.Name}  |  {_patient.PhoneNumber}" +
+                (string.IsNullOrWhiteSpace(_patient.Cnic) ? "" : $"  |  CNIC {_patient.Cnic}");
 
-            foreach (var row in DatabaseHelper.GetResultsForPatient(_patient.Id))
+            var sampleAt = _patient.SampleCollectedAt == default ? _patient.CreatedAt : _patient.SampleCollectedAt;
+            txtDemographics.Text =
+                $"Age: {_patient.AgeDisplay}   ·   Gender: {_patient.Gender}   ·   Pregnancy: {_patient.PregnancyStatus}   ·   Sample: {sampleAt:dd-MMM-yyyy hh:mm tt}";
+
+            foreach (var row in DatabaseHelper.GetResultsForPatient(_patient.Id).Where(r => r.IsResultRow))
+            {
+                if (string.IsNullOrWhiteSpace(row.AbnormalFlag))
+                    row.RecalculateStatus();
                 _results.Add(row);
+            }
 
             dgResults.ItemsSource = _results;
+            Loaded += (_, _) => Dispatcher.BeginInvoke(() => FocusResult(0), DispatcherPriority.ContextIdle);
+        }
+
+        private void ResultInput_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not TextBox box || box.IsKeyboardFocusWithin)
+                return;
+
+            box.Focus();
+            e.Handled = true;
+        }
+
+        private void dgResults_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Tab)
+                return;
+
+            var box = FocusedResultBox();
+            if (box?.DataContext is not TestResultItem row)
+                return;
+
+            int index = _results.IndexOf(row);
+            if (index < 0)
+                return;
+
+            bool backward = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+            int next = backward ? index - 1 : index + 1;
+            if (next < 0)
+                return;
+
+            e.Handled = true;
+            if (next >= _results.Count)
+            {
+                btnSaveResults.Focus();
+                return;
+            }
+
+            FocusResult(next);
+        }
+
+        private TextBox? FocusedResultBox()
+        {
+            if (Keyboard.FocusedElement is TextBox direct && Equals(direct.Tag, "ResultInput"))
+                return direct;
+
+            if (Keyboard.FocusedElement is not DependencyObject focused)
+                return null;
+
+            var cell = FindAncestor<DataGridCell>(focused);
+            if (cell == null)
+                return null;
+
+            return FindVisualChildren<TextBox>(cell).FirstOrDefault(b => Equals(b.Tag, "ResultInput"));
+        }
+
+        private void FocusResult(int index, bool allowRetry = true)
+        {
+            if (index < 0 || index >= _results.Count || dgResults == null)
+                return;
+
+            var item = _results[index];
+            dgResults.SelectedItem = item;
+            dgResults.ScrollIntoView(item);
+            dgResults.UpdateLayout();
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                var input = FindVisualChildren<TextBox>(dgResults)
+                    .FirstOrDefault(b => Equals(b.Tag, "ResultInput") && ReferenceEquals(b.DataContext, item));
+                if (input == null)
+                {
+                    if (allowRetry)
+                        Dispatcher.BeginInvoke(() => FocusResult(index, false), DispatcherPriority.ApplicationIdle);
+                    return;
+                }
+
+                input.Focus();
+                Keyboard.Focus(input);
+                input.SelectAll();
+            }, DispatcherPriority.Loaded);
+        }
+
+        private static T? FindAncestor<T>(DependencyObject child) where T : DependencyObject
+        {
+            var current = child;
+            while (current != null)
+            {
+                if (current is T match)
+                    return match;
+                current = VisualTreeHelper.GetParent(current);
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+        {
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T match)
+                    yield return match;
+                foreach (var nested in FindVisualChildren<T>(child))
+                    yield return nested;
+            }
         }
 
         private void btnSaveResults_Click(object sender, RoutedEventArgs e)
@@ -58,12 +179,11 @@ namespace LabReportApp
 
             try
             {
-                // Stage 2: write the Result values back into the existing TestResults rows
-                // and mark this patient's Status as "Completed".
+                foreach (var row in _results)
+                    row.RecalculateStatus();
+
                 DatabaseHelper.SaveResultsAndComplete(_patient.Id, _results.ToList());
 
-                // Same QR/URL that was already printed on the bill at billing time - this is
-                // exactly where the report needs to be uploaded so that QR code starts working.
                 string reportUrl = AppSettings.ReportsBaseUrl.TrimEnd('/') + "/" + _patient.SerialNumber + ".pdf";
                 byte[] qrBytes = QrCodeService.GenerateQrPng(reportUrl);
 
@@ -82,26 +202,6 @@ namespace LabReportApp
 
                 txtStatus.Text = "Uploading report online...";
                 bool uploaded = FtpUploadService.UploadReport(localPdfPath, _patient.SerialNumber + ".pdf", out string ftpError);
-
-                /* ============================================================================
-                 * SMS NOTIFICATION - DISABLED / COMMENTED OUT
-                 * The patient now retrieves their report by scanning the QR code that was
-                 * already printed on their bill (and is also on the report itself) - no SMS
-                 * is sent. To re-enable SMS in future, uncomment this block, restore
-                 * SmsApiUrlTemplate/EnableSmsSending in Config/AppSettings.cs, and uncomment
-                 * Services/SmsService.cs.
-                 *
-                 * txtStatus.Text = "Sending SMS to patient...";
-                 * bool smsSent = false;
-                 * if (uploaded)
-                 * {
-                 *     string message = $"Dear {_patient.Name} (Age: {_patient.Age}, Gender: {_patient.Gender}), your lab report is ready.\n" +
-                 *                       $"Serial No: {_patient.SerialNumber}\n" +
-                 *                       $"Date & Time: {DateTime.Now:dd-MMM-yyyy hh:mm tt}\n" +
-                 *                       $"Download your report here: {reportUrl}";
-                 *     smsSent = await SmsService.SendSmsAsync(_patient.PhoneNumber, message);
-                 * }
-                 * ============================================================================ */
 
                 string statusMsg = $"Report for {_patient.SerialNumber} completed and saved at:\n{localPdfPath}\n";
                 statusMsg += uploaded
@@ -132,9 +232,6 @@ namespace LabReportApp
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void btnCancel_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

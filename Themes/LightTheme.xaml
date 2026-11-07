@@ -1,31 +1,46 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ===================== LIGHT THEME COLOR PALETTE ===================== -->
-    <SolidColorBrush x:Key="ColorPrimary" Color="#5B8DEF"/>
-    <SolidColorBrush x:Key="ColorPrimaryDark" Color="#4472CC"/>
-    <SolidColorBrush x:Key="ColorPrimaryLight" Color="#EAF1FE"/>
-    <SolidColorBrush x:Key="ColorAccent" Color="#22C1A3"/>
-    <SolidColorBrush x:Key="ColorAccentDark" Color="#1AA48A"/>
-    <SolidColorBrush x:Key="ColorDanger" Color="#EF6C7E"/>
-    <SolidColorBrush x:Key="ColorDangerDark" Color="#D85268"/>
-    <SolidColorBrush x:Key="ColorBackground" Color="#F5F8FC"/>
+    <!-- High-contrast light theme. White cards sit on a blue-gray page so edges and text stay easy to read. -->
+    <SolidColorBrush x:Key="ColorPrimary" Color="#1565C0"/>
+    <SolidColorBrush x:Key="ColorPrimaryDark" Color="#0D47A1"/>
+    <SolidColorBrush x:Key="ColorPrimaryLight" Color="#E3F0FF"/>
+    <SolidColorBrush x:Key="ColorAccent" Color="#15803D"/>
+    <SolidColorBrush x:Key="ColorAccentDark" Color="#166534"/>
+    <SolidColorBrush x:Key="ColorDanger" Color="#DC2626"/>
+    <SolidColorBrush x:Key="ColorDangerDark" Color="#B91C1C"/>
+    <SolidColorBrush x:Key="ColorBackground" Color="#E4EDF7"/>
     <SolidColorBrush x:Key="ColorCard" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ColorBorder" Color="#DCE3EE"/>
-    <SolidColorBrush x:Key="ColorTextPrimary" Color="#1F2937"/>
-    <SolidColorBrush x:Key="ColorTextSecondary" Color="#8492A6"/>
-    <SolidColorBrush x:Key="ColorHeaderBg" Color="#EEF3FC"/>
-    <SolidColorBrush x:Key="ColorHeaderSubtitle" Color="#DCE8FF"/>
-    <SolidColorBrush x:Key="ColorBannerBg" Color="#5B8DEF"/>
-    <SolidColorBrush x:Key="ColorScrollThumb" Color="#C9D2E0"/>
+    <SolidColorBrush x:Key="ColorBorder" Color="#9AADC4"/>
+    <SolidColorBrush x:Key="ColorTextPrimary" Color="#0F172A"/>
+    <SolidColorBrush x:Key="ColorTextSecondary" Color="#334155"/>
+    <SolidColorBrush x:Key="ColorHeaderBg" Color="#E7F1FB"/>
+    <SolidColorBrush x:Key="ColorHeaderSubtitle" Color="#F8FBFF"/>
+    <LinearGradientBrush x:Key="ColorBannerBg" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2F86F0" Offset="0"/>
+        <GradientStop Color="#1A68D4" Offset="0.48"/>
+        <GradientStop Color="#1457B8" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="ColorScrollThumb" Color="#7E92AB"/>
 
-    <!-- Secondary/utility colors (previously hardcoded hex values in styles) -->
-    <SolidColorBrush x:Key="ColorSecondaryBg" Color="#EEF1F6"/>
-    <SolidColorBrush x:Key="ColorSecondaryHoverBg" Color="#E1E6EF"/>
-    <SolidColorBrush x:Key="ColorButtonDisabledBg" Color="#C9D4E3"/>
-    <SolidColorBrush x:Key="ColorAccentDisabledBg" Color="#C9E7E0"/>
+    <SolidColorBrush x:Key="ColorSecondaryBg" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ColorSecondaryHoverBg" Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="ColorButtonDisabledBg" Color="#C5D0DE"/>
+    <SolidColorBrush x:Key="ColorAccentDisabledBg" Color="#B7D4C4"/>
     <SolidColorBrush x:Key="ColorInputBg" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ColorInputDisabledBg" Color="#F2F4F8"/>
-    <SolidColorBrush x:Key="ColorRowAlternate" Color="#F7FAFD"/>
+    <SolidColorBrush x:Key="ColorInputDisabledBg" Color="#EEF2F6"/>
+    <SolidColorBrush x:Key="ColorRowAlternate" Color="#F4F8FC"/>
+    <SolidColorBrush x:Key="ColorHeaderButton" Color="#0C3D86"/>
+    <SolidColorBrush x:Key="ColorHeaderButtonHover" Color="#0A326C"/>
+    <SolidColorBrush x:Key="ColorWave" Color="#D5E3F4"/>
+
+    <SolidColorBrush x:Key="ColorStatusLow" Color="#DC2626"/>
+    <SolidColorBrush x:Key="ColorStatusHigh" Color="#C2410C"/>
+    <SolidColorBrush x:Key="ColorStatusNormal" Color="#15803D"/>
+    <SolidColorBrush x:Key="ColorStatusNotConfigured" Color="#B45309"/>
+
+    <SolidColorBrush x:Key="ColorFocusBorder" Color="#1565C0"/>
+    <SolidColorBrush x:Key="ColorSuccess" Color="#15803D"/>
+    <SolidColorBrush x:Key="ColorWarning" Color="#C2410C"/>
 
 </ResourceDictionary>

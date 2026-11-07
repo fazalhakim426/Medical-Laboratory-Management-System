@@ -1,0 +1,421 @@
+<Window x:Class="LabReportApp.PdfCustomizeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Customize PDF — Lab ProX" Height="840" Width="1240"
+        MinHeight="680" MinWidth="1040"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ColorBackground}"
+        ShowInTaskbar="False">
+    <Window.Resources>
+        <Style x:Key="MultilineBox" TargetType="TextBox">
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalContentAlignment" Value="Top"/>
+            <Setter Property="MinHeight" Value="72"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="{DynamicResource ColorInputBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ColorTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ColorBorder}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ColorTextPrimary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalScrollBarVisibility="Auto"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SwatchButton" TargetType="Button">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="#94A3B8" BorderThickness="1" CornerRadius="4"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource ColorBannerBg}" Padding="24,16">
+            <StackPanel>
+                <TextBlock x:Name="txtWindowTitle" Text="Customize PDF" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock x:Name="txtWindowSubtitle" FontSize="13.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource ColorHeaderSubtitle}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="16,14,16,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="390"/>
+            </Grid.ColumnDefinitions>
+
+            <TabControl Grid.Column="0" Margin="0,0,14,0">
+                <TabItem Header="Paper">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <TextBlock Text="PAPER SIZE" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbPaperSize" Height="40" Margin="0,0,0,6" SelectionChanged="Selection_Changed">
+                                <ComboBoxItem Content="A4" Tag="A4"/>
+                                <ComboBoxItem Content="A5" Tag="A5"/>
+                                <ComboBoxItem Content="Thermal printer – 58mm" Tag="Thermal58"/>
+                                <ComboBoxItem Content="Thermal printer – 80mm" Tag="Thermal80"/>
+                                <ComboBoxItem Content="Custom paper size" Tag="Custom"/>
+                            </ComboBox>
+                            <TextBlock x:Name="txtPaperHelp" TextWrapping="Wrap" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,0,12"/>
+
+                            <StackPanel x:Name="pnlCustomSize" Visibility="Collapsed" Margin="0,0,0,12">
+                                <TextBlock Text="WIDTH (MM)" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="txtCustomWidth" Height="40" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                                <StackPanel x:Name="pnlCustomHeight">
+                                    <TextBlock Text="HEIGHT (MM)" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox x:Name="txtCustomHeight" Height="40" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <CheckBox x:Name="chkCustomContinuous" Content="Continuous height (paper roll)"
+                                          Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            </StackPanel>
+
+                            <TextBlock Text="PRINTER" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbPrinter" Height="40" Margin="0,0,0,12" SelectionChanged="Selection_Changed"/>
+
+                            <TextBlock Text="MARGINS (MM)" Style="{StaticResource FieldLabel}"/>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Top" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtMarginTop" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                    <TextBlock Text="Right" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtMarginRight" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                    <TextBlock Text="Bottom" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtMarginBottom" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="Left" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtMarginLeft" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="SPACING (MM)" Style="{StaticResource FieldLabel}"/>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Between sections" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtSectionSpacing" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Table cell padding" FontSize="12" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtCellPadding" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <CheckBox x:Name="chkPageBorder" Content="Draw a page border" Margin="0,0,0,8"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="BORDER THICKNESS" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox x:Name="txtBorderThickness" Height="40" TextChanged="Text_Changed"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="BORDER COLOR" Style="{StaticResource FieldLabel}"/>
+                                    <DockPanel>
+                                        <Border x:Name="swatchBorder" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0"
+                                                CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                        <TextBox x:Name="txtBorderColor" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Header">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <TextBlock Text="Hospital name, address and phone come from Settings. Upload the hospital logo here. The same file is used on bills and reports."
+                                       TextWrapping="Wrap" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,0,12"/>
+                            <TextBlock Text="DOCUMENT TITLE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtDocumentTitle" Height="40" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <TextBlock Text="SUBTITLE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtSubtitle" Height="40" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <TextBlock Text="HEADER NOTE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtHeaderNote" Style="{StaticResource MultilineBox}" Height="72" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <TextBlock Text="ALIGNMENT" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbHeaderAlign" Height="40" Margin="0,0,0,10" SelectionChanged="Selection_Changed">
+                                <ComboBoxItem Content="Left" Tag="Left"/>
+                                <ComboBoxItem Content="Center" Tag="Center"/>
+                                <ComboBoxItem Content="Right" Tag="Right"/>
+                            </ComboBox>
+                            <CheckBox x:Name="chkShowLogo" Content="Show hospital logo" Margin="0,0,0,8"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBlock Text="HOSPITAL LOGO" Style="{StaticResource FieldLabel}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Width="72" Height="72" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"
+                                        CornerRadius="8" Background="{DynamicResource ColorInputBg}" Margin="0,0,12,0">
+                                    <Image x:Name="imgHospitalLogo" Stretch="Uniform" Margin="6"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="txtNoLogo" Text="No logo uploaded." TextWrapping="Wrap" MaxWidth="280"
+                                               FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ColorTextSecondary}"/>
+                                    <TextBlock x:Name="txtLogoFile" TextWrapping="Wrap" MaxWidth="320" Margin="0,4,0,8"
+                                               FontSize="12" Foreground="{DynamicResource ColorTextSecondary}"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Upload logo" Style="{StaticResource SecondaryButton}" Height="38" Padding="14,0" Click="btnBrowseLogo_Click"/>
+                                        <Button Content="Remove logo" Style="{StaticResource SecondaryButton}" Height="38" Margin="8,0,0,0" Padding="14,0" Click="btnClearLogo_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="PNG or JPEG. Shown on this document when “Show hospital logo” is on."
+                                       TextWrapping="Wrap" Margin="0,0,0,8" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ColorTextSecondary}"/>
+                            <TextBlock Text="LOGO HEIGHT (MM)" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtLogoHeight" Height="40" Width="160" HorizontalAlignment="Left" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <CheckBox x:Name="chkHeaderLine" Content="Show line under the header" Margin="0,0,0,12"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+
+                            <TextBlock Text="HEADER BACKGROUND" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchHeaderBg" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtHeaderBackground" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="HOSPITAL NAME COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchHeaderText" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtHeaderText" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="TITLE COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchTitle" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtTitleColor" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="Click a color box, then a swatch." FontSize="12" Foreground="{DynamicResource ColorTextSecondary}" Margin="0,4,0,6"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource SwatchButton}" Background="#1457B8" Click="PresetColor_Click" Tag="#1457B8"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#0F172A" Click="PresetColor_Click" Tag="#0F172A"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#15803D" Click="PresetColor_Click" Tag="#15803D"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#B91C1C" Click="PresetColor_Click" Tag="#B91C1C"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#7C3AED" Click="PresetColor_Click" Tag="#7C3AED"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#0F766E" Click="PresetColor_Click" Tag="#0F766E"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#B45309" Click="PresetColor_Click" Tag="#B45309"/>
+                                <Button Style="{StaticResource SwatchButton}" Background="#FFFFFF" Click="PresetColor_Click" Tag="#FFFFFF"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Text">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <TextBlock Text="HEADING FONT" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbHeadingFont" Height="40" Margin="0,0,0,8" SelectionChanged="Selection_Changed"/>
+                            <TextBlock Text="HEADING SIZE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtHeadingSize" Height="40" Width="160" HorizontalAlignment="Left" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <CheckBox x:Name="chkHeadingBold" Content="Bold headings" Margin="0,0,0,12"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBlock Text="BODY FONT" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbBodyFont" Height="40" Margin="0,0,0,8" SelectionChanged="Selection_Changed"/>
+                            <TextBlock Text="BODY SIZE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtBodySize" Height="40" Width="160" HorizontalAlignment="Left" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+
+                            <TextBlock Text="BODY TEXT COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchBody" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtBodyColor" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="MUTED TEXT COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchMuted" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtMutedColor" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="ACCENT COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,12">
+                                <Border x:Name="swatchAccent" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtAccentColor" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+
+                            <TextBlock Text="TABLE HEADER BACKGROUND" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchTableBg" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtTableHeaderBg" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="TABLE HEADER TEXT" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchTableFg" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtTableHeaderFg" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <TextBlock Text="TABLE LINE COLOR" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <Border x:Name="swatchTableLine" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtTableLine" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+                            <CheckBox x:Name="chkTableBorders" Content="Show full table borders" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Fields">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <TextBlock Text="Choose which details appear. Hiding a field here does not remove it from the other PDF."
+                                       TextWrapping="Wrap" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,0,12"/>
+                            <WrapPanel>
+                                <CheckBox x:Name="chkSerial" Content="Serial number" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkDate" Content="Date" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkPatient" Content="Patient name" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkAge" Content="Age / gender" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkPhone" Content="Phone" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkCnic" Content="CNIC" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkDoctor" Content="Referred by" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                <CheckBox x:Name="chkQr" Content="QR code" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            </WrapPanel>
+
+                            <StackPanel x:Name="pnlBillFields" Margin="0,8,0,0">
+                                <TextBlock Text="Bill amounts" Style="{StaticResource SectionHeading}" Margin="0,0,0,8"/>
+                                <WrapPanel>
+                                    <CheckBox x:Name="chkPrice" Content="Price" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkDiscount" Content="Discount" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkNet" Content="Net amount" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkTotals" Content="Totals" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <StackPanel x:Name="pnlReportFields" Margin="0,8,0,0">
+                                <TextBlock Text="Report columns" Style="{StaticResource SectionHeading}" Margin="0,0,0,8"/>
+                                <WrapPanel>
+                                    <CheckBox x:Name="chkPregnancy" Content="Pregnancy" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkUnit" Content="Unit" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkRange" Content="Reference range" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkStatus" Content="Status" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkCategories" Content="Category headings" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                    <CheckBox x:Name="chkEnd" Content="End of report line" Margin="0,0,18,10" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Notes">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <CheckBox x:Name="chkCustomNote" Content="Show custom note" Margin="0,0,0,8"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBox x:Name="txtCustomNote" Style="{StaticResource MultilineBox}" Height="80" Margin="0,0,0,12" TextChanged="Text_Changed"/>
+
+                            <CheckBox x:Name="chkSignature" Content="Show signature line" Margin="0,0,0,8"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBlock Text="SIGNATURE NAME" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtSignatureName" Height="40" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <TextBlock Text="SIGNATURE TITLE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtSignatureTitle" Height="40" Margin="0,0,0,12" TextChanged="Text_Changed"/>
+
+                            <CheckBox x:Name="chkStamp" Content="Show stamp" Margin="0,0,0,8"
+                                      Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBlock Text="STAMP TEXT" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtStampText" Height="40" Margin="0,0,0,12" TextChanged="Text_Changed"/>
+
+                            <TextBlock Text="Customer footer" Style="{StaticResource SectionHeading}" Margin="0,4,0,8"/>
+                            <TextBlock Text="This sits above the permanent Lab ProX line. It cannot replace that line."
+                                       TextWrapping="Wrap" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource ColorTextSecondary}" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="chkFooterAddress" Content="Repeat address" Margin="0,0,0,6" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <CheckBox x:Name="chkFooterContact" Content="Repeat contact details" Margin="0,0,0,6" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <CheckBox x:Name="chkFooterLine" Content="Show a line above the customer footer" Margin="0,0,0,8" Checked="MarkChanged" Unchecked="MarkChanged"/>
+                            <TextBlock Text="FOOTER NOTE" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="txtFooterNote" Style="{StaticResource MultilineBox}" Height="72" Margin="0,0,0,8" TextChanged="Text_Changed"/>
+                            <TextBlock Text="FOOTER ALIGNMENT" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox x:Name="cmbFooterAlign" Height="40" Margin="0,0,0,8" SelectionChanged="Selection_Changed">
+                                <ComboBoxItem Content="Left" Tag="Left"/>
+                                <ComboBoxItem Content="Center" Tag="Center"/>
+                                <ComboBoxItem Content="Right" Tag="Right"/>
+                            </ComboBox>
+                            <TextBlock Text="FOOTER BACKGROUND" Style="{StaticResource FieldLabel}"/>
+                            <DockPanel Margin="0,0,0,14">
+                                <Border x:Name="swatchFooterBg" DockPanel.Dock="Right" Width="40" Height="40" Margin="8,0,0,0" CornerRadius="8" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1"/>
+                                <TextBox x:Name="txtFooterBackground" Height="40" GotFocus="ColorBox_GotFocus" TextChanged="Text_Changed"/>
+                            </DockPanel>
+
+                            <Border Background="{DynamicResource ColorPrimaryLight}" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1" CornerRadius="10" Padding="12">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{DynamicResource ColorPrimary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Permanent Lab ProX footer" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtLockedFooter" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="This line is added to every bill, receipt and laboratory report. It cannot be hidden or edited."
+                                               TextWrapping="Wrap" FontSize="12.5" Margin="0,6,0,0"
+                                               Foreground="{DynamicResource ColorTextSecondary}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Live preview" Style="{StaticResource SectionHeading}" Margin="0,0,0,8"/>
+                <Border Grid.Row="1" Background="White" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="1" CornerRadius="10">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10">
+                        <Image x:Name="imgPreview" Stretch="Uniform" HorizontalAlignment="Center"/>
+                    </ScrollViewer>
+                </Border>
+                <StackPanel Grid.Row="2" Margin="0,8,0,0">
+                    <TextBlock x:Name="txtPreviewStatus" TextWrapping="Wrap" FontSize="12.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource ColorTextSecondary}"/>
+                    <Button Content="Refresh preview" Style="{StaticResource SecondaryButton}" Height="36"
+                            HorizontalAlignment="Left" Margin="0,8,0,0" Padding="14,0" Click="btnRefresh_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="2" BorderBrush="{DynamicResource ColorBorder}" BorderThickness="0,1,0,0" Padding="16,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Reset to defaults" Style="{StaticResource SecondaryButton}" Height="42" Padding="16,0" Click="btnReset_Click"/>
+                <Button Content="Close" Style="{StaticResource SecondaryButton}" Height="42" Margin="10,0,0,0" Padding="16,0" Click="btnClose_Click"/>
+                <Button x:Name="btnSave" Content="Save" Style="{StaticResource AccentButton}" Height="42" MinWidth="120" Margin="10,0,0,0" Click="btnSave_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

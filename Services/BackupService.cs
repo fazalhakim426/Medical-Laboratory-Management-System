@@ -9,7 +9,7 @@ namespace LabReportApp.Services
 {
     public static class BackupService
     {
-        private static readonly string DbFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LabReports.db");
+        private static string DbFile => AppPaths.DatabaseFile;
         private static string ConnectionString => $"Data Source={DbFile}";
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace LabReportApp.Services
 
             bool anySuccess = false;
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string backupFileName = $"LabReports_backup_{timestamp}.db";
+            string backupFileName = $"LabProX_backup_{timestamp}.db";
 
             foreach (var folder in GetBackupFolders())
             {
@@ -108,7 +108,7 @@ namespace LabReportApp.Services
                 {
                     string safetyCopy = Path.Combine(
                         Path.GetDirectoryName(DbFile) ?? ".",
-                        $"LabReports_beforeRestore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                        $"LabProX_beforeRestore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
                     File.Copy(DbFile, safetyCopy, overwrite: true);
                 }
 
@@ -141,7 +141,8 @@ namespace LabReportApp.Services
             try
             {
                 var backups = new DirectoryInfo(folder)
-                    .GetFiles("LabReports_backup_*.db")
+                    .GetFiles("LabProX_backup_*.db")
+                    .Concat(new DirectoryInfo(folder).GetFiles("LabReports_backup_*.db"))
                     .OrderByDescending(f => f.CreationTime)
                     .ToList();
 

@@ -6,8 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <RootNamespace>LabReportApp</RootNamespace>
-    <AssemblyName>LabReportApp</AssemblyName>
+    <AssemblyName>LabProX</AssemblyName>
+    <Product>Lab ProX</Product>
+    <AssemblyTitle>Lab ProX</AssemblyTitle>
     <ApplicationIcon>Assets\Logo.ico</ApplicationIcon>
+    <Company>Lab ProX</Company>
+    <Description>Lab ProX laboratory management system</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +30,8 @@
 
   <ItemGroup>
     <Content Include="Reports\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Database\common_laboratory_tests_seed.csv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Database\test_reference_ranges_seed.csv" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\Logo.ico" />
   </ItemGroup>
 
